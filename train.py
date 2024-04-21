@@ -191,14 +191,14 @@ class InferenceCls():
             'Dlinear': Dlinear
         }
         self.device = args.device
-        self.model = self.model_dict[self.args.model].Model(self.args).float()
-        self.model.load_state_dict(args.model_checkpoint)
+        self.model = self.model_dict[self.args.model](self.args).float().to(self.device)
+        self.model.load_state_dict(torch.load(args.checkpoint_file))
 
     # data: (sequence_length, feature_size)
     def inference(self, data):
         data = torch.Tensor(data).unsqueeze(0).to(self.device)
         outputs = self.model(data, None)
         outputs = outputs.squeeze(0).detach().cpu()
-        probs = F.softmax(outputs)
+        probs = torch.softmax(outputs, dim=-1)
         preds = torch.argmax(probs, dim=1).cpu().numpy()
         return preds

@@ -1,10 +1,12 @@
 import argparse
 import os
-from train import TrainerCls
+from train import TrainerCls, InferenceCls
+from data_process import CryptoDataset
 import pandas as pd
 import torch.cuda
+import numpy as np
 
-# Press the green button in the gutter to run the script.
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--root_path", type=str, default="datasets", help="data root")
@@ -18,10 +20,10 @@ if __name__ == '__main__':
 
     parser.add_argument("--model", type=str, default="Dlinear")
     parser.add_argument("--checkpoint_dir", type=str, default="checkpoints", help="checkpoints dir")
-    parser.add_argument("--checkpoint_file", type=str, default="checkpoint.pth", help="checkpoints model for test or inference")
+    parser.add_argument("--checkpoint_file", type=str, default="checkpoints/SeqCls_Dlinear_96_30/checkpoint.pth", help="checkpoints model for test or inference")
     parser.add_argument("--is_training", type=bool, default=True)
     parser.add_argument("--patience", type=int, default=7)
-    # parser.add_argument("--inference_only", type=bool, default=False)
+    parser.add_argument("--inference_only", type=bool, default=False)
     parser.add_argument("--classes", type=int, default=2, help="classification classes")
     parser.add_argument("--batch_size", type=int, default=720)
     parser.add_argument("--train_epochs", type=int, default=20)
@@ -46,7 +48,14 @@ if __name__ == '__main__':
     print(df_data.columns.values)
     args.variable_size = df_data.shape[1] - 1
     trainer = TrainerCls(args)
-    if args.is_training:
+
+    if args.inference_only:
+        infer = InferenceCls(args)
+        inference_dataset = CryptoDataset(args, "test")
+        data, label = inference_dataset.__getitem__(0)
+        preds = infer.inference(data)
+        print("inference accuracy={}".format(np.mean(preds == label)))
+    elif args.is_training:
         print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
         trainer.train(setting)
         print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
