@@ -1,0 +1,8 @@
+binance_connector==3.6.0
+numpy==1.26.4
+pandas==2.0.3
+python_dateutil==2.8.2
+pytz==2023.3.post1
+scikit_learn==1.2.2
+tardis_dev==2.0.0a13
+torch==2.1.0
