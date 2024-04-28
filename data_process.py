@@ -5,6 +5,7 @@ import math
 import torch
 from torch.utils.data import Dataset
 from sklearn.preprocessing import StandardScaler
+from matplotlib import pyplot as plt
 
 
 class CryptoDataset(Dataset):
@@ -23,6 +24,7 @@ class CryptoDataset(Dataset):
 
         self.root_path = configs.root_path
         self.data_path = configs.data_path
+        self.threshold = configs.class_threshold
         self.__read_data__()
 
     def __read_data__(self):
@@ -44,14 +46,21 @@ class CryptoDataset(Dataset):
             data = df_data.values
 
         target_data = self.get_target_data(df_data)
-
         self.data_x = data[border1:border2]
         self.data_y = target_data[border1:border2]
 
     def get_target_data(self, df_data):
-        target_data = np.zeros_like(df_data[self.target])
-        target_data[1:] = df_data[self.target].values[1:] - df_data[self.target].values[:-1]
-        target_data = (target_data > 0).astype(np.int64)
+        diff_percentage = np.zeros_like(df_data[self.target])
+        diff_percentage[1:] = (df_data[self.target].values[1:] - df_data[self.target].values[:-1]) / (df_data[self.target].values[:-1] + 1e-10)
+        '''
+        sr = pd.Series(np.abs(diff_percentage))
+        print(sr.describe())
+        sr.plot.kde()
+        plt.show()
+        plt.close()
+        '''
+        # 0: fall, 1:unchanged, 2:rise
+        target_data = np.array([1 if abs(x) < self.threshold else 2 * int(x > 0) for x in diff_percentage], dtype=np.int64)
         return target_data
 
     def __getitem__(self, item):
